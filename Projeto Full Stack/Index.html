@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão - Escola Bianca Ramos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-yellow: #FFCC00;
+            --brand-black: #111111;
+            --bg-light: #F8F9FA;
+            --card-white: #FFFFFF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--brand-black); display: flex; flex-direction: column; min-height: 100vh; }
+
+        header {
+            background-color: var(--brand-yellow); padding: 15px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.3);
+        }
+        .header-left { display: flex; align-items: center; }
+        .logo-img {
+            width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;
+            object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 1.5rem; font-weight: 800; margin-left: 15px; letter-spacing: -0.5px; }
+        .admin-badge {
+            background-color: var(--brand-black); color: var(--brand-yellow);
+            padding: 8px 20px; border-radius: 30px; font-weight: 700;
+            font-size: 0.9rem; text-transform: uppercase; border: 2px solid white;
+        }
+        .container {
+            max-width: 1100px; margin: 40px auto; padding: 0 20px;
+            display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; flex-grow: 1; width: 100%;
+        }
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 15px; text-align: center; }
+            .header-left { flex-direction: column; }
+            header h1 { margin-left: 0; margin-top: 10px; }
+        }
+        .card {
+            background: var(--card-white); border-radius: 25px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08); overflow: hidden;
+        }
+        .card-header-yellow { background-color: var(--brand-yellow); padding: 20px; text-align: center; }
+        h2 { font-size: 1.3rem; font-weight: 800; color: var(--brand-black); }
+        .card-body { padding: 30px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; }
+        input {
+            width: 100%; padding: 15px; margin-bottom: 20px;
+            border: 2px solid #eee; border-radius: 15px; font-size: 1rem;
+            transition: 0.3s; background-color: #fcfcfc;
+        }
+        input:focus { outline: none; border-color: var(--brand-yellow); background-color: #fff; }
+        .btn-primary {
+            width: 100%; padding: 18px; background: var(--brand-yellow); color: var(--brand-black);
+            border: none; border-radius: 15px; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: transform 0.2s, background 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(255, 204, 0, 0.4);
+        }
+        .btn-primary:hover { background-color: #ffd633; transform: translateY(-3px); }
+        .dashboard-controls {
+            background-color: #FFF8E1; padding: 15px; border-radius: 15px; margin-bottom: 25px;
+            display: flex; flex-direction: column; gap: 10px; border: 2px solid var(--brand-yellow);
+        }
+        @media(min-width: 768px) { .dashboard-controls { flex-direction: row; justify-content: space-between; align-items: center; } }
+        .date-control { display: flex; gap: 10px; align-items: center; flex-grow: 1; }
+        .date-control input { margin-bottom: 0; border: 2px solid var(--brand-black); font-weight: 600; }
+        .btn-filter {
+            background: var(--brand-black); color: var(--brand-yellow); border: none;
+            padding: 12px 25px; border-radius: 12px; font-weight: 700; cursor: pointer;
+        }
+        .chart-section-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; margin: 30px 0 20px 0; }
+        .chart-icon { font-size: 1.3rem; }
+        .vertical-chart-container {
+            display: flex; justify-content: space-around; align-items: flex-end;
+            height: 220px; padding-bottom: 10px; border-bottom: 2px solid #eee;
+        }
+        .v-col { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 60px; }
+        .v-val { font-weight: 700; margin-bottom: 5px; font-size: 0.9rem; }
+        .v-bar {
+            width: 100%; background-color: var(--brand-yellow);
+            border-radius: 10px 10px 4px 4px; transition: height 1s ease-out;
+            min-height: 4px; box-shadow: 0 4px 8px rgba(255, 204, 0, 0.25);
+        }
+        .v-label { text-align: center; font-size: 0.8rem; font-weight: 600; margin-top: 10px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .chart-faixa .v-bar { background-color: var(--brand-black); }
+        footer {
+            text-align: center; padding: 30px; background-color: #fff; margin-top: auto; border-top: 1px solid #eee;
+        }
+        .footer-text {
+            color: #666; font-size: 0.95rem; font-weight: 600; background-color: #f0f0f0;
+            padding: 8px 20px; border-radius: 20px; display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <img src="" id="logo-escola" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+            <h1>Escola de Música Bianca Ramos</h1>
+        </div>
+        <div class="admin-badge">Painel Administrativo</div>
+    </header>
+
+    <div class="container">
+        <section>
+            <div class="card">
+                <div class="card-header-yellow"><h2>Novo Aluno</h2></div>
+                <div class="card-body">
+                    <label>Nome do Aluno</label>
+                    <input type="text" id="nome" placeholder="Ex: Ana Clara">
+                    <label>Data de Nascimento</label>
+                    <input type="date" id="nasc">
+                    <label>Email do Responsável</label>
+                    <input type="email" id="email" placeholder="email@exemplo.com">
+                    <button class="btn-primary" onclick="cadastrarAluno()"><span>🎵</span> Cadastrar</button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="card">
+                 <div class="card-header-yellow"><h2>Estatísticas da Escola</h2></div>
+                <div class="card-body">
+                    <div class="dashboard-controls">
+                        <div class="date-control">
+                            <label>📅 Visualizar até:</label>
+                            <input type="date" id="filtro-data">
+                        </div>
+                        <button class="btn-filter" onclick="carregarDashboard()">Filtrar Dados</button>
+                    </div>
+                    <div id="dashboard-content" style="min-height: 300px;"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-text">®️ Projeto de Extensão em Software Fullstack</div>
+    </footer>
+
+    <script>
+        // CONFIGURAÇÃO IMPORTANTE PARA VERCEL
+        const API_URL = "/api"; 
+
+        window.onload = function() {
+            carregarLogo();
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('filtro-data').value = hoje;
+            carregarDashboard();
+        };
+
+        async function carregarLogo() {
+            try {
+                const res = await fetch(`${API_URL}/config`);
+                const data = await res.json();
+                if(data.logo_url) {
+                    const img = document.getElementById('logo-escola');
+                    img.src = data.logo_url;
+                    img.style.display = 'block';
+                }
+            } catch(e) { console.error("Erro logo", e); }
+        }
+
+        async function cadastrarAluno() {
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Salvando..."; btn.disabled = true;
+
+            const nome = document.getElementById('nome').value;
+            const nasc = document.getElementById('nasc').value;
+            const email = document.getElementById('email').value;
+
+            if(!nome || !nasc) {
+                alert("Por favor, preencha nome e data.");
+                btn.innerHTML = originalText; btn.disabled = false; return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/alunos`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: nome, birth_date: nasc, email: email })
+                });
+                
+                if(res.ok) {
+                    alert("🎉 Aluno cadastrado!");
+                    document.getElementById('nome').value = '';
+                    document.getElementById('email').value = '';
+                    carregarDashboard();
+                } else {
+                    const err = await res.json();
+                    alert("Erro: " + (err.detail || "Erro desconhecido"));
+                }
+            } catch(e) {
+                alert("Erro de conexão com o servidor.");
+            } finally {
+                btn.innerHTML = originalText; btn.disabled = false;
+            }
+        }
+
+        async function carregarDashboard() {
+            const container = document.getElementById('dashboard-content');
+            const dataSelecionada = document.getElementById('filtro-data').value;
+            container.style.opacity = '0.4';
+
+            try {
+                const res = await fetch(`${API_URL}/dashboard?data_limite=${dataSelecionada}`);
+                if(!res.ok) throw new Error("Falha na API");
+                const data = await res.json();
+                
+                let html = '';
+                // Gráfico Alunos
+                html += '<div class="chart-section-title"><span class="chart-icon">👥</span> Alunos por Professor</div>';
+                html += '<div class="vertical-chart-container">';
+                const maxAlunos = Math.max(...data.alunos_por_professor.map(p => p.total_alunos), 1);
+                
+                data.alunos_por_professor.forEach(p => {
+                    const nomeCurto = p.professor.split(' ')[0];
+                    const percentage = (p.total_alunos / maxAlunos) * 100;
+                    html += `
+                    <div class="v-col">
+                        <div class="v-val">${p.total_alunos}</div>
+                        <div class="v-bar" style="height: ${percentage}%"></div>
+                        <div class="v-label">${nomeCurto}<br><small style="font-size:0.6rem; color:#666">${p.instrumento.split(' ')[0]}</small></div>
+                    </div>`;
+                });
+                html += '</div>';
+
+                // Gráfico Idade
+                html += '<div class="chart-section-title chart-faixa"><span class="chart-icon">📊</span> Faixa Etária</div>';
+                html += '<div class="vertical-chart-container chart-faixa">';
+                const maxFaixa = Math.max(...Object.values(data.faixa_etaria), 1);
+                const labelsSimples = { "Criança (0-11)": "< 11", "Adolescente (12-17)": "12-17", "Adulto (18-59)": "18-59", "Sênior (60+)": "60+" };
+                
+                for (const [grupo, qtd] of Object.entries(data.faixa_etaria)) {
+                    const percentage = (qtd / maxFaixa) * 100;
+                    html += `
+                    <div class="v-col">
+                        <div class="v-val">${qtd}</div>
+                        <div class="v-bar" style="height: ${percentage}%"></div>
+                        <div class="v-label">${labelsSimples[grupo] || grupo}</div>
+                    </div>`;
+                }
+                html += '</div>';
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error("Erro Dashboard:", error);
+                container.innerHTML = "<p style='text-align:center; margin-top:20px; color: red;'>Erro ao carregar dados. Verifique o Back-end.</p>";
+            } finally { container.style.opacity = '1'; }
+        }
+    </script>
+</body>
+</html>

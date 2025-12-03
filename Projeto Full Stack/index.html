@@ -164,20 +164,23 @@
                     img.src = data.logo_url;
                     img.style.display = 'block';
                 }
-            } catch(e) { console.error("Erro logo", e); }
+            } catch(e) { 
+                // Erro silencioso para a Logo não incomodar o usuário
+                console.log("Aviso: Logo não carregada do backend."); 
+            }
         }
 
         async function cadastrarAluno() {
             const btn = document.querySelector('.btn-primary');
             const originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ Salvando..."; btn.disabled = true;
+            btn.innerHTML = "⏳ Conectando..."; btn.disabled = true;
 
             const nome = document.getElementById('nome').value;
             const nasc = document.getElementById('nasc').value;
             const email = document.getElementById('email').value;
 
             if(!nome || !nasc) {
-                alert("Por favor, preencha nome e data.");
+                alert("Atenção: Campos Obrigatórios\n\nPor favor, preencha o Nome e a Data de Nascimento antes de cadastrar.");
                 btn.innerHTML = originalText; btn.disabled = false; return;
             }
 
@@ -189,16 +192,26 @@
                 });
                 
                 if(res.ok) {
-                    alert("🎉 Aluno cadastrado!");
+                    alert("Sucesso!\n\nAluno cadastrado no sistema.");
                     document.getElementById('nome').value = '';
                     document.getElementById('email').value = '';
                     carregarDashboard();
                 } else {
-                    const err = await res.json();
-                    alert("Erro: " + (err.detail || "Erro desconhecido"));
+                    // Tenta ler o erro específico do servidor (ex: formato de data inválido, banco fora do ar)
+                    let mensagemErro = "Erro desconhecido no servidor.";
+                    try {
+                        const err = await res.json();
+                        if (err.detail) mensagemErro = err.detail;
+                    } catch(jsonError) {
+                        mensagemErro = "Não foi possível ler os detalhes do erro.";
+                    }
+                    
+                    alert(`O Servidor Recusou o Cadastro:\n\nMotivo: "${mensagemErro}"\n\nVerifique os dados e tente novamente.`);
                 }
             } catch(e) {
-                alert("Erro de conexão com o servidor.");
+                // Erro de rede (Fetch failed)
+                console.error(e);
+                alert("Falha de Conexão Crítica\n\nO site não conseguiu falar com o servidor (Backend).\n\nPossíveis causas:\n1. O servidor Python/Vercel está desligado ou reiniciando.\n2. A rota '/api' não foi encontrada (Erro 404).\n3. Problema na sua internet.");
             } finally {
                 btn.innerHTML = originalText; btn.disabled = false;
             }
@@ -211,49 +224,58 @@
 
             try {
                 const res = await fetch(`${API_URL}/dashboard?data_limite=${dataSelecionada}`);
-                if(!res.ok) throw new Error("Falha na API");
+                
+                if(!res.ok) {
+                    // Força o código a ir para o bloco catch se o status não for 200 OK
+                    throw new Error(`Servidor respondeu com erro: ${res.status} ${res.statusText}`);
+                }
+
                 const data = await res.json();
                 
+                // Se chegou aqui, temos dados!
                 let html = '';
-                // Gráfico Alunos
-                html += '<div class="chart-section-title"><span class="chart-icon">👥</span> Alunos por Professor</div>';
-                html += '<div class="vertical-chart-container">';
-                const maxAlunos = Math.max(...data.alunos_por_professor.map(p => p.total_alunos), 1);
-                
-                data.alunos_por_professor.forEach(p => {
-                    const nomeCurto = p.professor.split(' ')[0];
-                    const percentage = (p.total_alunos / maxAlunos) * 100;
-                    html += `
-                    <div class="v-col">
-                        <div class="v-val">${p.total_alunos}</div>
-                        <div class="v-bar" style="height: ${percentage}%"></div>
-                        <div class="v-label">${nomeCurto}<br><small style="font-size:0.6rem; color:#666">${p.instrumento.split(' ')[0]}</small></div>
-                    </div>`;
-                });
-                html += '</div>';
 
-                // Gráfico Idade
+                // === Gráfico de Idade ===
                 html += '<div class="chart-section-title chart-faixa"><span class="chart-icon">📊</span> Faixa Etária</div>';
-                html += '<div class="vertical-chart-container chart-faixa">';
-                const maxFaixa = Math.max(...Object.values(data.faixa_etaria), 1);
-                const labelsSimples = { "Criança (0-11)": "< 11", "Adolescente (12-17)": "12-17", "Adulto (18-59)": "18-59", "Sênior (60+)": "60+" };
                 
-                for (const [grupo, qtd] of Object.entries(data.faixa_etaria)) {
-                    const percentage = (qtd / maxFaixa) * 100;
-                    html += `
-                    <div class="v-col">
-                        <div class="v-val">${qtd}</div>
-                        <div class="v-bar" style="height: ${percentage}%"></div>
-                        <div class="v-label">${labelsSimples[grupo] || grupo}</div>
-                    </div>`;
+                if (!data.faixa_etaria || Object.keys(data.faixa_etaria).length === 0) {
+                     html += '<p style="text-align:center; padding:20px; color:#666;">Nenhum dado encontrado para esta data.</p>';
+                } else {
+                    html += '<div class="vertical-chart-container chart-faixa">';
+                    const maxFaixa = Math.max(...Object.values(data.faixa_etaria), 1);
+                    const labelsSimples = { "Criança (4-11)": "< 11", "Adolescente (12-17)": "12-17", "Adulto (18-59)": "18-59", "Sênior (60+)": "60+" };
+                    
+                    for (const [grupo, qtd] of Object.entries(data.faixa_etaria)) {
+                        const percentage = (qtd / maxFaixa) * 100;
+                        html += `
+                        <div class="v-col">
+                            <div class="v-val">${qtd}</div>
+                            <div class="v-bar" style="height: ${percentage}%"></div>
+                            <div class="v-label">${labelsSimples[grupo] || grupo}</div>
+                        </div>`;
+                    }
+                    html += '</div>';
                 }
-                html += '</div>';
+
+                // Se houver aviso do backend (ex: erro de SQL tratado)
+                if (data.aviso) {
+                    html += `<p style="color: orange; text-align: center; font-size: 0.8rem; margin-top: 10px;">⚠️ ${data.aviso}</p>`;
+                }
 
                 container.innerHTML = html;
 
             } catch (error) {
                 console.error("Erro Dashboard:", error);
-                container.innerHTML = "<p style='text-align:center; margin-top:20px; color: red;'>Erro ao carregar dados. Verifique o Back-end.</p>";
+                
+                // Mensagem visual amigável no lugar do gráfico
+                container.innerHTML = `
+                    <div style="background-color: #ffebee; border: 1px solid #ffcdd2; color: #b71c1c; padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3 style="margin-bottom: 10px;">Erro não foi possível carregar o gráfico</h3>
+                        <p style="margin-bottom: 10px;">Ocorreu uma falha na comunicação com o sistema.</p>
+                        <small style="display:block; margin-bottom: 15px; color: #555;">Detalhe técnico: ${error.message}</small>
+                        <button onclick="carregarDashboard()" style="background: #b71c1c; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">Tentar Novamente</button>
+                    </div>
+                `;
             } finally { container.style.opacity = '1'; }
         }
     </script>
